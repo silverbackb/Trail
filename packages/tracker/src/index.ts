@@ -63,7 +63,11 @@ function init(): void {
   const script = (document.currentScript as HTMLScriptElement | null)
     ?? document.querySelector<HTMLScriptElement>('script[src*="t.js"][data-account-id]');
   _accountId = script?.dataset["accountId"] ?? w["TRAIL_ACCOUNT_ID"] ?? TRAIL_ACCOUNT_ID;
-  _apiUrl = script?.dataset["apiUrl"] ?? w["TRAIL_API_URL"] ?? TRAIL_API_URL;
+
+  // Priority: data-api-url > window.TRAIL_API_URL > auto-detect from script src > compile-time constant
+  const scriptSrc = script?.src;
+  const autoUrl = scriptSrc ? new URL(scriptSrc).origin : "";
+  _apiUrl = script?.dataset["apiUrl"] ?? w["TRAIL_API_URL"] ?? autoUrl ?? TRAIL_API_URL;
   _visitorId = getOrCreateVisitorId();
 
   trackSession();

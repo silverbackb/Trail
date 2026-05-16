@@ -4,6 +4,7 @@ import { z } from "zod";
 
 export interface Env {
   DB: D1Database;
+  TRAIL_API_KEY: string;
 }
 
 function buildServer(db: D1Database): McpServer {
@@ -205,6 +206,11 @@ export default {
 
     if (url.pathname !== "/mcp") {
       return new Response("Not found", { status: 404 });
+    }
+
+    const auth = request.headers.get("Authorization");
+    if (!env.TRAIL_API_KEY || auth !== `Bearer ${env.TRAIL_API_KEY}`) {
+      return new Response("Unauthorized", { status: 401 });
     }
 
     const transport = new WebStandardStreamableHTTPServerTransport({

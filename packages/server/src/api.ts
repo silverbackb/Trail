@@ -14,6 +14,8 @@ const TouchpointSchema = z.object({
     utm_term: z.string().nullable().optional(),
     gclid: z.string().nullable().optional(),
     fbclid: z.string().nullable().optional(),
+    li_fat_id: z.string().nullable().optional(),
+    ttclid: z.string().nullable().optional(),
     referrer: z.string().nullable().optional(),
     referrer_type: z.string(),
     landing_url: z.string().optional(),
@@ -32,7 +34,7 @@ export function createApiRoutes(db: Database.Database) {
   app.get("/t.js", (c) => {
     return c.body(TRACKER_SCRIPT, 200, {
       "Content-Type": "application/javascript; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "public, max-age=300",
     });
   });
 

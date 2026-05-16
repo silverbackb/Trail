@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --minify --format=iife --outfile=dist/t.js --define:TRAIL_ACCOUNT_ID='\"\"' --define:TRAIL_API_URL='\"https://trail-api.cvescan-pro.workers.dev\"'",
+    "build": "esbuild src/index.ts --bundle --minify --format=iife --outfile=dist/t.js --define:TRAIL_ACCOUNT_ID='\"\"' --define:TRAIL_API_URL='\"\"'",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"
   },

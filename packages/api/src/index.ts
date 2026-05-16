@@ -15,7 +15,7 @@ app.use("*", cors({ origin: "*", allowMethods: ["GET", "POST", "OPTIONS"] }));
 app.get("/t.js", (c) => {
   return c.body(TRACKER_SCRIPT, 200, {
     "Content-Type": "application/javascript; charset=utf-8",
-    "Cache-Control": "public, max-age=3600",
+    "Cache-Control": "public, max-age=300",
   });
 });
 
