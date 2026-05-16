@@ -2,9 +2,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { z } from "zod";
 import type { Context } from "hono";
-import type Database from "better-sqlite3";
+import type { DatabaseSync } from "node:sqlite";
 
-function buildServer(db: Database.Database): McpServer {
+function buildServer(db: DatabaseSync): McpServer {
   const server = new McpServer({ name: "trail", version: "0.1.0" });
 
   server.registerTool("trail_create_account", {
@@ -131,7 +131,7 @@ function buildServer(db: Database.Database): McpServer {
   return server;
 }
 
-export function createMcpHandler(db: Database.Database) {
+export function createMcpHandler(db: DatabaseSync) {
   return async (c: Context) => {
     const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined });
     const server = buildServer(db);

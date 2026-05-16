@@ -1,9 +1,9 @@
-import Database from "better-sqlite3";
+import { DatabaseSync } from "node:sqlite";
 
-export function createDB(dbPath = "./trail.db"): Database.Database {
-  const db = new Database(dbPath);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
+export function createDB(dbPath = "./trail.db"): DatabaseSync {
+  const db = new DatabaseSync(dbPath);
+  db.exec("PRAGMA journal_mode = WAL;");
+  db.exec("PRAGMA foreign_keys = ON;");
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS accounts (

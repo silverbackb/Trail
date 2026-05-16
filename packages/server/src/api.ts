@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import type Database from "better-sqlite3";
+import type { DatabaseSync } from "node:sqlite";
 import { TRACKER_SCRIPT } from "./tracker.js";
 
 const TouchpointSchema = z.object({
@@ -28,7 +28,7 @@ const ConvertSchema = z.object({
   lead_id: z.string(),
 });
 
-export function createApiRoutes(db: Database.Database) {
+export function createApiRoutes(db: DatabaseSync) {
   const app = new Hono();
 
   app.get("/t.js", (c) => {
@@ -64,9 +64,9 @@ export function createApiRoutes(db: Database.Database) {
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     `).run(
       id, visitor_id, account_id, sessionNum,
-      channel.utm_source, channel.utm_medium, channel.utm_campaign, channel.utm_term,
-      channel.referrer_type, channel.gclid, channel.fbclid,
-      channel.landing_url, channel.referrer, hostname
+      channel.utm_source ?? null, channel.utm_medium ?? null, channel.utm_campaign ?? null, channel.utm_term ?? null,
+      channel.referrer_type, channel.gclid ?? null, channel.fbclid ?? null,
+      channel.landing_url ?? null, channel.referrer ?? null, hostname ?? null
     );
 
     db.prepare("INSERT OR IGNORE INTO visitor_sessions (visitor_id,account_id,session_hash) VALUES (?,?,?)")
