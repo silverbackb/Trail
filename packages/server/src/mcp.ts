@@ -128,6 +128,28 @@ function buildServer(db: DatabaseSync): McpServer {
     return { content: [{ type: "text", text: `Channel performance:\n\n${"Channel".padEnd(20)} Visitors  Leads   Won   Rate\n${"─".repeat(60)}\n${lines.join("\n")}` }] };
   });
 
+  server.registerTool("trail_list_leads", {
+    description: "List all leads (form submissions) for an account, with their channel and date.",
+    inputSchema: {
+      account_id: z.string().describe("Trail account ID"),
+      limit: z.number().int().min(1).max(100).default(20),
+    },
+  }, async ({ account_id, limit }) => {
+    const rows = db.prepare(`
+      SELECT lead_id, ch_type, created_at
+      FROM visitor_touchpoints
+      WHERE account_id=? AND lead_id IS NOT NULL
+      GROUP BY lead_id
+      ORDER BY MAX(created_at) DESC
+      LIMIT ?
+    `).all(account_id, limit) as { lead_id: string; ch_type: string; created_at: string }[];
+
+    if (!rows.length) return { content: [{ type: "text", text: "No leads found." }] };
+
+    const lines = rows.map((r) => `• ${r.lead_id}  |  ${r.ch_type}  |  ${r.created_at}`);
+    return { content: [{ type: "text", text: `Leads (${rows.length}):\n\n${lines.join("\n")}` }] };
+  });
+
   return server;
 }
 
