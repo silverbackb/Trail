@@ -4,6 +4,11 @@ import { z } from "zod";
 import type { Context } from "hono";
 import type { DatabaseSync } from "node:sqlite";
 
+function toLocalTime(utc: string): string {
+  const tz = process.env.TRAIL_TZ ?? "Europe/Paris";
+  return new Date(utc + "Z").toLocaleString("fr-FR", { timeZone: tz, hour12: false });
+}
+
 function buildServer(db: DatabaseSync): McpServer {
   const server = new McpServer({ name: "trail", version: "0.1.0" });
 
@@ -33,7 +38,7 @@ function buildServer(db: DatabaseSync): McpServer {
 
     if (!rows.length) return { content: [{ type: "text", text: "No accounts yet." }] };
 
-    const lines = rows.map((r) => `• ${r.name}\n  ID: ${r.account_id}\n  Domain: ${r.domain}\n  Added: ${r.created_at}`);
+    const lines = rows.map((r) => `• ${r.name}\n  ID: ${r.account_id}\n  Domain: ${r.domain}\n  Added: ${toLocalTime(r.created_at)}`);
     return { content: [{ type: "text", text: `Trail accounts (${rows.length}):\n\n${lines.join("\n\n")}` }] };
   });
 
@@ -50,7 +55,7 @@ function buildServer(db: DatabaseSync): McpServer {
     if (!rows.length) return { content: [{ type: "text", text: `No journey found for lead ${lead_id}` }] };
 
     const lines = rows.map((r) =>
-      `Session ${r["session_num"]} — ${r["created_at"]}\n  Channel: ${r["ch_type"]} | Source: ${r["ch_source"] ?? "direct"} | Campaign: ${r["ch_campaign"] ?? "—"}\n  URL: ${r["landing_url"]}`
+      `Session ${r["session_num"]} — ${toLocalTime(r["created_at"] as string)}\n  Channel: ${r["ch_type"]} | Source: ${r["ch_source"] ?? "direct"} | Campaign: ${r["ch_campaign"] ?? "—"}\n  URL: ${r["landing_url"]}`
     );
     return { content: [{ type: "text", text: `Journey for ${lead_id} (${rows.length} touchpoints):\n\n${lines.join("\n\n")}` }] };
   });
@@ -146,7 +151,7 @@ function buildServer(db: DatabaseSync): McpServer {
 
     if (!rows.length) return { content: [{ type: "text", text: "No leads found." }] };
 
-    const lines = rows.map((r) => `• ${r.lead_id}  |  ${r.ch_type}  |  ${r.created_at}`);
+    const lines = rows.map((r) => `• ${r.lead_id}  |  ${r.ch_type}  |  ${toLocalTime(r.created_at)}`);
     return { content: [{ type: "text", text: `Leads (${rows.length}):\n\n${lines.join("\n")}` }] };
   });
 
