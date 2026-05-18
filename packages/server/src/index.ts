@@ -5,6 +5,7 @@ import { cors } from "hono/cors";
 import { createDB } from "./db.js";
 import { createApiRoutes } from "./api.js";
 import { createMcpHandler } from "./mcp.js";
+import { requireAuth } from "./auth.js";
 
 const port = parseInt(process.env.PORT ?? "3000");
 const dbPath = process.env.DB_PATH ?? "./trail.db";
@@ -14,7 +15,7 @@ const app = new Hono();
 
 app.use("*", cors({ origin: "*", allowMethods: ["GET", "POST", "DELETE", "OPTIONS"] }));
 app.route("/", createApiRoutes(db));
-app.all("/mcp", createMcpHandler(db));
+app.all("/mcp", requireAuth, createMcpHandler(db));
 
 serve({ fetch: app.fetch, port }, () => {
   const base = process.env.TRAIL_URL ?? `http://localhost:${port}`;
