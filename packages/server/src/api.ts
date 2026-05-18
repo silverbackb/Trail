@@ -38,6 +38,24 @@ export function createApiRoutes(db: DatabaseSync) {
     });
   });
 
+  app.get("/logs/recent", (c) => {
+    const limit = Math.min(parseInt(c.req.query("limit") ?? "50"), 100);
+    const rows = db.prepare(`
+      SELECT t.id, t.account_id, t.visitor_id, t.ch_type, t.ch_source, t.ch_campaign,
+             t.landing_url, t.lead_id, t.converted, t.hostname, t.created_at,
+             a.domain
+      FROM visitor_touchpoints t
+      LEFT JOIN accounts a ON a.account_id = t.account_id
+      ORDER BY t.created_at DESC
+      LIMIT ?
+    `).all(limit) as Record<string, unknown>[];
+
+    return c.json(rows.map((r) => ({
+      ...r,
+      created_at: new Date((r.created_at as string) + "Z").toISOString(),
+    })));
+  });
+
   app.get("/accounts/summary", (c) => {
     const rows = db.prepare(`
       SELECT
