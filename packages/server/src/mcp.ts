@@ -41,7 +41,7 @@ function buildServer(db: DatabaseSync): McpServer {
   });
 
   server.registerTool("trail_list_accounts", {
-    description: "List all Trail client accounts.",
+    description: "List all Trail client accounts with their account_id. Use this first to get the account_id needed by all other tools.",
     inputSchema: {},
   }, async () => {
     const rows = db.prepare("SELECT account_id, name, domain, created_at FROM accounts ORDER BY created_at DESC").all() as
@@ -53,17 +53,44 @@ function buildServer(db: DatabaseSync): McpServer {
     return { content: [{ type: "text", text: `Trail accounts (${rows.length}):\n\n${lines.join("\n\n")}` }] };
   });
 
-  server.registerTool("trail_get_journey", {
-    description: "Get the full multi-touch journey for a specific lead.",
+  server.registerTool("trail_get_recent_sessions", {
+    description: "Get the most recent tracking sessions (page visits) for an account. Use this to verify the tracker is installed and working — it shows raw sessions even if no form has been submitted yet. If the list is empty, the tracker is not firing. If it has entries, tracking is working correctly.",
     inputSchema: {
-      lead_id:    z.string().describe("Lead ID (email or CRM ID)"),
+      account_id: z.string().describe("Trail account ID"),
+      limit: z.number().int().min(1).max(50).default(10),
+    },
+  }, async ({ account_id, limit }) => {
+    const rows = db.prepare(`
+      SELECT visitor_id, ch_type, ch_source, ch_campaign, landing_url, lead_id, created_at
+      FROM visitor_touchpoints
+      WHERE account_id=?
+      ORDER BY created_at DESC
+      LIMIT ?
+    `).all(account_id, limit) as { visitor_id: string; ch_type: string; ch_source: string | null; ch_campaign: string | null; landing_url: string | null; lead_id: string | null; created_at: string }[];
+
+    if (!rows.length) return { content: [{ type: "text", text: `No sessions found for account "${account_id}". The tracker is either not installed, not yet triggered, or using a different account_id.` }] };
+
+    const lines = rows.map((r) => {
+      const source = r.ch_source ? ` | source: ${r.ch_source}` : "";
+      const campaign = r.ch_campaign ? ` | campaign: ${r.ch_campaign}` : "";
+      const url = r.landing_url ? ` | url: ${r.landing_url}` : "";
+      const lead = r.lead_id ? ` | lead: ${r.lead_id}` : "";
+      return `${toLocalTime(r.created_at)}  ${r.ch_type}${source}${campaign}${url}${lead}`;
+    });
+    return { content: [{ type: "text", text: `✓ Tracker is working — ${rows.length} sessions recorded for "${account_id}":\n\n${lines.join("\n")}` }] };
+  });
+
+  server.registerTool("trail_get_journey", {
+    description: "Get the full multi-touch journey for a specific lead (visitor who submitted a form). Requires a lead_id, which is the email or ID captured at form submission. If the visitor has not submitted a form yet, use trail_get_recent_sessions instead to see their raw sessions.",
+    inputSchema: {
+      lead_id:    z.string().describe("Lead ID — the email or CRM ID captured when the visitor submitted a form"),
       account_id: z.string().describe("Trail account ID"),
     },
   }, async ({ lead_id, account_id }) => {
     const rows = db.prepare("SELECT * FROM visitor_touchpoints WHERE lead_id=? AND account_id=? ORDER BY session_num ASC")
       .all(lead_id, account_id) as Record<string, unknown>[];
 
-    if (!rows.length) return { content: [{ type: "text", text: `No journey found for lead ${lead_id}` }] };
+    if (!rows.length) return { content: [{ type: "text", text: `No journey found for lead "${lead_id}" on account "${account_id}". This lead either does not exist or has not submitted a form yet. Use trail_list_leads to see all known leads.` }] };
 
     const lines = rows.map((r) =>
       `Session ${r["session_num"]} — ${toLocalTime(r["created_at"] as string)}\n  Channel: ${r["ch_type"]} | Source: ${r["ch_source"] ?? "direct"} | Campaign: ${r["ch_campaign"] ?? "—"}\n  URL: ${r["landing_url"]}`
@@ -72,7 +99,7 @@ function buildServer(db: DatabaseSync): McpServer {
   });
 
   server.registerTool("trail_get_report", {
-    description: "Get an attribution report for an account by channel.",
+    description: "Get an attribution report broken down by channel. Only counts visitors who submitted a form (leads). Use trail_get_channel_performance for a view that includes all visitors including non-converted ones.",
     inputSchema: {
       account_id: z.string().describe("Trail account ID"),
       model: z.enum(["first_touch", "last_touch", "linear"]).default("last_touch"),
@@ -87,7 +114,7 @@ function buildServer(db: DatabaseSync): McpServer {
       GROUP BY ch_type ORDER BY conversions DESC
     `).all(account_id) as { ch_type: string; leads: number; conversions: number }[];
 
-    if (!rows.length) return { content: [{ type: "text", text: "No attribution data found." }] };
+    if (!rows.length) return { content: [{ type: "text", text: `No attribution data for "${account_id}". No form submissions have been recorded yet. To verify the tracker is working, use trail_get_recent_sessions.` }] };
 
     const total = rows.reduce((s, r) => s + r.leads, 0);
     const lines = rows.map((r) => {
@@ -98,7 +125,7 @@ function buildServer(db: DatabaseSync): McpServer {
   });
 
   server.registerTool("trail_get_top_paths", {
-    description: "Get the most common multi-touch paths before converting.",
+    description: "Get the most common multi-touch channel sequences before a form submission. Only works with leads (visitors who submitted a form). Returns empty if no conversions have happened yet.",
     inputSchema: {
       account_id: z.string().describe("Trail account ID"),
       limit: z.number().int().min(1).max(20).default(10),
@@ -110,7 +137,7 @@ function buildServer(db: DatabaseSync): McpServer {
       GROUP BY lead_id
     `).all(account_id) as { lead_id: string; path: string }[];
 
-    if (!rows.length) return { content: [{ type: "text", text: "No path data found." }] };
+    if (!rows.length) return { content: [{ type: "text", text: "No path data found. No form submissions have been recorded yet." }] };
 
     const freq: Record<string, number> = {};
     for (const r of rows) freq[r.path] = (freq[r.path] ?? 0) + 1;
@@ -123,7 +150,7 @@ function buildServer(db: DatabaseSync): McpServer {
   });
 
   server.registerTool("trail_get_channel_performance", {
-    description: "Get channel performance: visitors, leads, conversions, and rate.",
+    description: "Get a full performance breakdown by channel: total visitors (all sessions), leads (form submissions), and conversion rate. Unlike trail_get_report, this shows ALL visitors including those who never submitted a form. Use this to understand traffic quality per channel.",
     inputSchema: { account_id: z.string().describe("Trail account ID") },
   }, async ({ account_id }) => {
     const rows = db.prepare(`
@@ -132,10 +159,10 @@ function buildServer(db: DatabaseSync): McpServer {
         COUNT(DISTINCT lead_id) as leads,
         SUM(CASE WHEN converted=1 THEN 1 ELSE 0 END) as conversions
       FROM visitor_touchpoints WHERE account_id=?
-      GROUP BY ch_type ORDER BY leads DESC
+      GROUP BY ch_type ORDER BY visitors DESC
     `).all(account_id) as { ch_type: string; visitors: number; leads: number; conversions: number }[];
 
-    if (!rows.length) return { content: [{ type: "text", text: "No performance data found." }] };
+    if (!rows.length) return { content: [{ type: "text", text: `No data for "${account_id}". The tracker has not recorded any sessions yet. Check that the snippet is installed and that the account_id matches exactly.` }] };
 
     const lines = rows.map((r) => {
       const rate = r.leads > 0 ? Math.round((r.conversions / r.leads) * 100) : 0;
@@ -145,7 +172,7 @@ function buildServer(db: DatabaseSync): McpServer {
   });
 
   server.registerTool("trail_list_leads", {
-    description: "List all leads (form submissions) for an account, with their channel and date.",
+    description: "List visitors who submitted a form (leads) for an account. IMPORTANT: this only returns data after a visitor has submitted a form on the client's website — it will be empty if no form submission has happened yet, even if the tracker is installed and working. To verify the tracker is working without form submissions, use trail_get_recent_sessions instead.",
     inputSchema: {
       account_id: z.string().describe("Trail account ID"),
       limit: z.number().int().min(1).max(100).default(20),
@@ -160,7 +187,7 @@ function buildServer(db: DatabaseSync): McpServer {
       LIMIT ?
     `).all(account_id, limit) as { lead_id: string; ch_type: string; created_at: string }[];
 
-    if (!rows.length) return { content: [{ type: "text", text: "No leads found." }] };
+    if (!rows.length) return { content: [{ type: "text", text: `No leads yet for "${account_id}". No visitor has submitted a form on this account's website. The tracker may still be working correctly — use trail_get_recent_sessions to check.` }] };
 
     const lines = rows.map((r) => `• ${r.lead_id}  |  ${r.ch_type}  |  ${toLocalTime(r.created_at)}`);
     return { content: [{ type: "text", text: `Leads (${rows.length}):\n\n${lines.join("\n")}` }] };
