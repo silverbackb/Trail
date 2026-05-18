@@ -82,6 +82,11 @@ export function createApiRoutes(db: DatabaseSync) {
     const parsed = TouchpointSchema.safeParse(body);
     if (!parsed.success) return c.json({ error: "invalid" }, 400);
 
+    // Ignore GTM preview/debug sessions (gtm-msr.appspot.com)
+    if (parsed.data.channel.landing_url?.includes("gtm-msr.appspot.com")) {
+      return c.json({ ok: true, ignored: "gtm_preview" });
+    }
+
     const { visitor_id, account_id, channel, hostname } = parsed.data;
     const sessionHash = Buffer.from(
       `${visitor_id}:${channel.referrer_type}:${channel.utm_source ?? ""}:${new Date().toISOString().slice(0, 10)}`

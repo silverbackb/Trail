@@ -19,18 +19,19 @@ const SEARCH_ENGINES = ["google", "bing", "yahoo", "duckduckgo", "yandex", "baid
 const SOCIAL_NETWORKS = ["facebook", "instagram", "twitter", "x.com", "linkedin", "tiktok", "youtube", "pinterest"];
 
 function classifyReferrer(referrer: string, params: URLSearchParams): ChannelType {
-  const source = params.get("utm_source");
-  if (source) return source;
-
   const gclid = params.get("gclid");
   const fbclid = params.get("fbclid");
   const li_fat_id = params.get("li_fat_id");
   const ttclid = params.get("ttclid");
 
+  // Click IDs take priority over utm_source — gclid means paid Google Ads regardless of utm_source value
   if (gclid) return "google_ads";
   if (fbclid) return "facebook_ads";
   if (li_fat_id) return "linkedin_ads";
   if (ttclid) return "tiktok_ads";
+
+  const source = params.get("utm_source");
+  if (source) return source;
 
   if (!referrer) return "direct";
 
