@@ -122,6 +122,25 @@ fetch('https://trail.silverbackbase.com/convert', {
 
 Trail exposes an MCP server so your AI agent can query attribution data directly.
 
+### Self-hosted (stdio — recommended for local use)
+
+Add to your `.mcp.json` or `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "trail": {
+      "command": "npx",
+      "args": ["-y", "--package=@silverbackbase/trail", "trail-mcp"]
+    }
+  }
+}
+```
+
+The MCP server connects to the same SQLite database as your local Trail server.
+
+### Cloud (HTTP)
+
 **Claude Code:**
 ```bash
 claude mcp add trail --transport http https://trail.silverbackbase.com/mcp
