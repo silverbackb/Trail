@@ -35,7 +35,7 @@ Query the data through an MCP server — ask your AI agent "where are my leads c
 | Referrer = social network | `organic_social` |
 | Nothing | `direct` |
 
-Click IDs (`gclid`, `fbclid`…) take priority over `utm_source`. UTM parameters are persisted in `sessionStorage` — if a visitor lands with UTMs then navigates to `/contact`, the channel is preserved when they submit the form.
+Click IDs (`gclid`, `fbclid`…) take priority over `utm_source`. UTM parameters and click IDs are persisted in `localStorage` with a 30-day TTL — if a visitor lands via a Google Ad, closes their browser, and returns directly a week later, the original channel is still attributed at conversion time.
 
 ---
 
@@ -46,16 +46,10 @@ Click IDs (`gclid`, `fbclid`…) take priority over `utm_source`. UTM parameters
 Requires Node.js 22+.
 
 ```bash
-npm install @silverbackbase/trail
+DATABASE_URL=postgres://... npx -y --package=@silverbackbase/trail trail
 ```
 
-Or run directly:
-
-```bash
-npx @silverbackbase/trail
-```
-
-Starts on `http://localhost:3000`. SQLite database created automatically at `~/.trail/trail.db`.
+Without `DATABASE_URL`, Trail starts on `http://localhost:3000` with a SQLite database created automatically at `./trail.db`.
 
 Add the tracker to your site:
 
@@ -203,7 +197,9 @@ packages/
 
 ## Stack
 
-- **Tracker** — vanilla TypeScript, compiled to ~3kb IIFE via esbuild
+- **Tracker** — vanilla TypeScript, compiled to ~3.5kb IIFE via esbuild
+  - Channel persisted in `localStorage` (30-day TTL) — cross-session attribution preserved
+  - Scroll depth (`scroll_depth_pct`) and time on page (`time_on_page_sec`) captured at conversion
 - **Server** — Hono + `@hono/node-server`
 - **Database** — SQLite via `node:sqlite` (built-in Node 22+) for self-hosted; PostgreSQL via `postgres` for cloud deployments
 - **MCP** — `@modelcontextprotocol/sdk` with Streamable HTTP transport
