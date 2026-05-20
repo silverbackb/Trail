@@ -335,5 +335,12 @@ function createPostgresDB(url: string): TrailDB {
 
 export function createDB(dbPath = "./trail.db"): TrailDB {
   const url = process.env.DATABASE_URL;
-  return url ? createPostgresDB(url) : createSQLiteDB(dbPath);
+  if (url) {
+    try { new URL(url); } catch {
+      console.error("[db] DATABASE_URL invalid (empty host?), falling back to SQLite");
+      return createSQLiteDB(dbPath);
+    }
+    return createPostgresDB(url);
+  }
+  return createSQLiteDB(dbPath);
 }
