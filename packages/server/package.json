@@ -1,6 +1,6 @@
 {
   "name": "@silverbackbase/trail",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "description": "Multi-touch attribution tracker — self-hosted, runs anywhere Node.js runs",
   "license": "MIT",
   "type": "module",
@@ -8,8 +8,9 @@
     "dist"
   ],
   "bin": {
-    "trail":     "./dist/index.js",
-    "trail-mcp": "./dist/mcp-stdio.js"
+    "trail":      "./dist/index.js",
+    "trail-mcp":  "./dist/mcp-stdio.js",
+    "trail-init": "./dist/init.js"
   },
   "repository": {
     "type": "git",

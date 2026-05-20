@@ -45,16 +45,30 @@ function classifyReferrer(referrer: string, params: URLSearchParams): ChannelTyp
   }
 }
 
-const STORAGE_KEY = "trail_channel";
+const SS_KEY = "trail_channel";
+const LS_KEY = "trail_channel_ls";
+const LS_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+interface StoredChannel { ch: Channel; exp: number; }
 
 function saveChannel(ch: Channel): void {
-  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(ch)); } catch {}
+  try { sessionStorage.setItem(SS_KEY, JSON.stringify(ch)); } catch {}
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({ ch, exp: Date.now() + LS_TTL_MS } as StoredChannel));
+  } catch {}
 }
 
 function loadChannel(): Channel | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Channel) : null;
+    const raw = sessionStorage.getItem(SS_KEY);
+    if (raw) return JSON.parse(raw) as Channel;
+  } catch {}
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    const stored = JSON.parse(raw) as StoredChannel;
+    if (Date.now() > stored.exp) { localStorage.removeItem(LS_KEY); return null; }
+    return stored.ch;
   } catch { return null; }
 }
 

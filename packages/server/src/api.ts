@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { TrailDB } from "./db.js";
 import { TRACKER_SCRIPT } from "./tracker.js";
+import { requireAuth } from "./auth.js";
 
 const TouchpointSchema = z.object({
   visitor_id: z.string(),
@@ -26,6 +27,8 @@ const ConvertSchema = z.object({
   visitor_id: z.string(),
   account_id: z.string(),
   lead_id: z.string(),
+  time_on_page_sec: z.number().int().nonnegative().optional(),
+  scroll_depth_pct: z.number().int().min(0).max(100).optional(),
 });
 
 export function createApiRoutes(db: TrailDB) {
@@ -38,7 +41,7 @@ export function createApiRoutes(db: TrailDB) {
     });
   });
 
-  app.get("/logs/recent", async (c) => {
+  app.get("/logs/recent", requireAuth, async (c) => {
     const limit = Math.min(parseInt(c.req.query("limit") ?? "50"), 100);
     const rows = await db.getRecentLogs(limit);
     return c.json(rows.map((r) => ({
@@ -47,7 +50,7 @@ export function createApiRoutes(db: TrailDB) {
     })));
   });
 
-  app.get("/accounts/summary", async (c) => {
+  app.get("/accounts/summary", requireAuth, async (c) => {
     const rows = await db.getAccountsSummary();
     return c.json(rows.map((r) => ({
       ...r,
@@ -97,7 +100,7 @@ export function createApiRoutes(db: TrailDB) {
     return c.json({ ok: true, session: sessionNum });
   });
 
-  app.get("/journey/:visitor_id", async (c) => {
+  app.get("/journey/:visitor_id", requireAuth, async (c) => {
     const visitor_id = c.req.param("visitor_id");
     const account_id = c.req.query("account_id");
     const rows = await db.getJourneyByVisitor(visitor_id, account_id);
@@ -108,8 +111,8 @@ export function createApiRoutes(db: TrailDB) {
     const body = await c.req.json().catch(() => null);
     const parsed = ConvertSchema.safeParse(body);
     if (!parsed.success) return c.json({ error: "invalid" }, 400);
-    const { visitor_id, account_id, lead_id } = parsed.data;
-    await db.convertVisitor(lead_id, visitor_id, account_id);
+    const { visitor_id, account_id, lead_id, time_on_page_sec, scroll_depth_pct } = parsed.data;
+    await db.convertVisitor(lead_id, visitor_id, account_id, time_on_page_sec, scroll_depth_pct);
     return c.json({ ok: true });
   });
 

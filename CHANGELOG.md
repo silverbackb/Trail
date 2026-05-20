@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4.2 — 2026-05-20
+
+### Ajouté
+- **localStorage 30j** — le canal d'acquisition est maintenant persisté dans `localStorage` avec une TTL de 30 jours. Avant : fermer l'onglet effaçait le canal (`sessionStorage`). Maintenant : un visiteur revenu une semaine plus tard via accès direct conserve son attribution d'origine.
+- **Scroll depth** — le tracker mesure le pourcentage de scroll maximal atteint avant conversion. Envoyé dans le payload `/convert` (`scroll_depth_pct`).
+- **Temps avant conversion** — durée en secondes entre le chargement de la page et la soumission du formulaire (`time_on_page_sec`). Permet des insights du type "les leads LinkedIn passent 3x plus de temps avant de convertir".
+- **Colonnes DB** — `time_on_page_sec` et `scroll_depth_pct` ajoutés à `visitor_touchpoints` (SQLite + PostgreSQL). Migration automatique au démarrage pour les bases existantes.
+
 ## v0.2.0 — 2026-05-18
 
 ### Ajouté

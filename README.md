@@ -150,18 +150,27 @@ The MCP server connects to the same SQLite database as your local Trail server.
 
 ### Cloud (HTTP)
 
-**Claude Code:**
+**Installation automatique** — détecte et configure Claude Code, Claude Desktop et Cursor :
 ```bash
-claude mcp add trail --transport http https://trail.silverbackbase.com/mcp
+npx @silverbackbase/trail init --token <your-token>
+```
+Get your token at [silverbackbase.com/account/tokens](https://silverbackbase.com/account/tokens).
+
+**Manuel — Claude Code:**
+```bash
+claude mcp add trail --transport http https://trail.silverbackbase.com/mcp --header "Authorization: Bearer <your-token>"
 ```
 
-**Claude Desktop / Cursor** (`mcp.json`):
+**Manuel — Claude Desktop / Cursor** (`mcp.json`):
 ```json
 {
   "mcpServers": {
     "trail": {
       "type": "http",
-      "url": "https://trail.silverbackbase.com/mcp"
+      "url": "https://trail.silverbackbase.com/mcp",
+      "headers": {
+        "Authorization": "Bearer <your-token>"
+      }
     }
   }
 }

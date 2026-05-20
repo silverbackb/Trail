@@ -8,6 +8,13 @@ let _apiUrl: string;
 let _accountId: string;
 let _visitorId: string;
 
+const _pageStart = Date.now();
+let _maxScroll = 0;
+window.addEventListener("scroll", () => {
+  const pct = Math.round(((window.scrollY + window.innerHeight) / document.documentElement.scrollHeight) * 100);
+  if (pct > _maxScroll) _maxScroll = pct;
+}, { passive: true });
+
 function hasCampaignSignal(): boolean {
   const p = new URLSearchParams(location.search);
   return !!(p.get("utm_source") || p.get("gclid") || p.get("fbclid") || p.get("li_fat_id") || p.get("ttclid"));
@@ -51,6 +58,8 @@ function trackForms(): void {
         visitor_id: _visitorId,
         account_id: _accountId,
         lead_id: _visitorId,
+        time_on_page_sec: Math.round((Date.now() - _pageStart) / 1000),
+        scroll_depth_pct: _maxScroll,
       }),
       keepalive: true,
     }).catch(() => {});
