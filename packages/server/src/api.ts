@@ -72,6 +72,25 @@ export function createApiRoutes(db: TrailDB) {
     }
 
     const { visitor_id, account_id, channel, hostname } = parsed.data;
+
+    // Auto-create account if it doesn't exist yet in the database
+    let domainVal = hostname || "";
+    if (!domainVal && channel.landing_url) {
+      try {
+        domainVal = new URL(channel.landing_url).hostname;
+      } catch {}
+    }
+    if (!domainVal) {
+      domainVal = account_id;
+    }
+    const nameVal = domainVal
+      .replace(/^www\./i, "")
+      .split(".")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ") || account_id;
+
+    await db.createAccount(account_id, nameVal, domainVal, null);
+
     const sessionHash = Buffer.from(
       `${visitor_id}:${channel.referrer_type}:${channel.utm_source ?? ""}:${new Date().toISOString().slice(0, 10)}`
     ).toString("base64");
