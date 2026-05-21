@@ -1,6 +1,6 @@
 {
   "name": "@silverbackbase/trail",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "Multi-touch attribution tracker — self-hosted, runs anywhere Node.js runs",
   "license": "MIT",
   "type": "module",
@@ -8,8 +8,8 @@
     "dist"
   ],
   "bin": {
-    "trail":      "./dist/index.js",
-    "trail-mcp":  "./dist/mcp-stdio.js",
+    "trail": "./dist/index.js",
+    "trail-mcp": "./dist/mcp-stdio.js",
     "trail-init": "./dist/init.js"
   },
   "repository": {
@@ -17,7 +17,13 @@
     "url": "https://github.com/SilverBackBase/Trail.git"
   },
   "homepage": "https://github.com/SilverBackBase/Trail",
-  "keywords": ["attribution", "analytics", "multi-touch", "tracker", "mcp"],
+  "keywords": [
+    "attribution",
+    "analytics",
+    "multi-touch",
+    "tracker",
+    "mcp"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json && node scripts/embed-tracker.cjs",
     "dev": "tsx src/index.ts",
@@ -30,6 +36,7 @@
     "@modelcontextprotocol/sdk": "^1.29.0",
     "hono": "^4.3.0",
     "postgres": "^3.4.0",
+    "smol-toml": "^1.6.1",
     "zod": "^3.23.0"
   },
   "devDependencies": {

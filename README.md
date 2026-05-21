@@ -144,7 +144,7 @@ The MCP server connects to the same SQLite database as your local Trail server.
 
 ### Cloud (HTTP)
 
-**Installation automatique** — détecte et configure Claude Code, Claude Desktop et Cursor :
+**Installation automatique** — détecte et configure Claude Code, Claude Desktop, Antigravity et Codex CLI :
 ```bash
 npx @silverbackbase/trail init --token <your-token>
 ```

@@ -72,6 +72,9 @@ importers:
       postgres:
         specifier: ^3.4.0
         version: 3.4.9
+      smol-toml:
+        specifier: ^1.6.1
+        version: 1.6.1
       zod:
         specifier: ^3.23.0
         version: 3.25.76
@@ -1476,6 +1479,10 @@ packages:
 
   simple-swizzle@0.2.4:
     resolution: {integrity: sha512-nAu1WFPQSMNr2Zn9PGSZK9AGn4t/y97lEm+MXTtUDwfP0ksAIX4nO+6ruD9Jwut4C49SB1Ws+fbXsm/yScWOHw==}
+
+  smol-toml@1.6.1:
+    resolution: {integrity: sha512-dWUG8F5sIIARXih1DTaQAX4SsiTXhInKf1buxdY9DIg4ZYPZK5nGM1VRIYmEbDbsHt7USo99xSLFu5Q1IqTmsg==}
+    engines: {node: '>= 18'}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -2903,6 +2910,8 @@ snapshots:
     dependencies:
       is-arrayish: 0.3.4
     optional: true
+
+  smol-toml@1.6.1: {}
 
   source-map-js@1.2.1: {}
 

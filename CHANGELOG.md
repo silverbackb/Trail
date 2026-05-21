@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.6.0 — 2026-05-21
+
+### Ajouté
+- **Support multi-outils dans `trail-init`** — détecte et configure automatiquement Antigravity (`~/.gemini/antigravity/mcp_config.json`) et Codex CLI (`~/.codex/config.toml`) en plus de Claude Code et Claude Desktop.
+- **Format TOML pour Codex CLI** — injection correcte dans `config.toml` via `smol-toml` (section `[mcp_servers.trail]`).
+
+### Corrigé
+- **Race condition Claude Desktop / Windsurf / Antigravity** — `trail-init` détecte si une app GUI est en cours d'exécution (`pgrep` sur macOS, `tasklist` sur Windows) et bloque jusqu'à ce qu'elle soit fermée avant d'écrire la config. Évite l'écrasement silencieux du fichier de config par l'app.
+
 ## v0.5.2 — 2026-05-21
 
 ### Corrigé
