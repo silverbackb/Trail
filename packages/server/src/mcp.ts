@@ -37,7 +37,18 @@ export function buildServer(db: TrailDB, workspaceId: string | null = null): Mcp
       instructions = `Installation dans le <head> du site, avant </head>.`;
     }
 
-    return { content: [{ type: "text", text: `Account created: ${name}\nID: ${account_id}\n\n${instructions}\n\nSnippet:\n\n${snippet}` }] };
+    const convertSnippet = `// À appeler au submit du formulaire (côté client)
+fetch('${baseUrl}/convert', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    visitor_id: document.cookie.match(/trail_vid=([^;]+)/)?.[1] ?? '',
+    account_id: '${account_id}',
+    lead_id: document.querySelector('[name="email"]')?.value ?? '',
+  }),
+});`;
+
+    return { content: [{ type: "text", text: `Account created: ${name}\nID: ${account_id}\n\n${instructions}\n\nSnippet tracker:\n\n${snippet}\n\n─────────────────────────────\nÉtape 2 — Tracker la conversion (submit formulaire) :\n\n${convertSnippet}\n\nRemplacez lead_id par l'email ou l'identifiant du lead capturé dans votre formulaire.` }] };
   });
 
   server.registerTool("trail_list_accounts", {

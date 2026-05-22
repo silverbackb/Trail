@@ -43,7 +43,7 @@ if (process.argv.slice(2).includes("init")) {
   app.route("/", createApiRoutes(db));
   app.all("/mcp", requireAuth, createMcpHandler(db));
 
-  serve({ fetch: app.fetch, port }, () => {
+  serve({ fetch: app.fetch, port, hostname: "::" }, () => {
     const base = process.env.TRAIL_URL ?? `http://localhost:${port}`;
     console.log(`Trail server running on port ${port}`);
     console.log(`  MCP    → ${base}/mcp`);
