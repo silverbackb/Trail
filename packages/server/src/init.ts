@@ -164,7 +164,10 @@ async function main() {
 
     if (token) {
       // Ask if they want to install on missing clients
-      const ans = (await rl.question(`  MCP SilverBackBase manquant sur : ${missingNames}\n  Installer ? (O/n) : `)).trim().toLowerCase();
+      const source = withMcp.length > 0 ? ` (token récupéré depuis ${withMcp[0].name})` : "";
+      console.log(`  Le MCP SilverBackBase n'est pas encore configuré sur : ${missingNames}`);
+      console.log(`  Il sera ajouté automatiquement${source}.\n`);
+      const ans = (await rl.question(`  Confirmer ? (Y/n) : `)).trim().toLowerCase();
       if (ans !== "n") {
         for (const client of missingWithClaudeCode) {
           writeMcp(client, token);

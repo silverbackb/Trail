@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.7.5 — 2026-05-24
+
+### Modifié
+- **Skill renommé** : `trail-attribution` → `trail-attribution-sbb` (convention de nommage SilverBackBase pour les fichiers installés chez les clients)
+
 ## v0.6.0 — 2026-05-21
 
 ### Ajouté

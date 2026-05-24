@@ -1,5 +1,5 @@
 ---
-name: trail-attribution
+name: trail-attribution-sbb
 description: Multi-touch attribution analysis using Trail. Use when the user asks about lead acquisition channels, marketing performance, where leads come from, channel ROI, or form conversion paths. Also use to verify that the Trail tracker is working on a client site.
 ---
 
