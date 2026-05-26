@@ -150,18 +150,13 @@ npx @silverbackbase/trail init --token <your-token>
 ```
 Get your token at [silverbackbase.com/account/tokens](https://silverbackbase.com/account/tokens).
 
-**Manuel — Claude Code:**
-```bash
-claude mcp add trail --transport http https://trail.silverbackbase.com/mcp --header "Authorization: Bearer <your-token>"
-```
-
-**Manuel — Claude Desktop / Cursor** (`mcp.json`):
+**Manuel — Claude Code / Claude Desktop** (`~/.claude.json` or `claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "trail": {
+    "silverbackbase": {
       "type": "http",
-      "url": "https://trail.silverbackbase.com/mcp",
+      "url": "https://mcp.silverbackbase.com/mcp",
       "headers": {
         "Authorization": "Bearer <your-token>"
       }
