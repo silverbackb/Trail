@@ -39,6 +39,13 @@ if (process.argv.slice(2).includes("init")) {
     }) + "\n");
   });
 
+  let trailVersion = "0.0.0";
+  try {
+    const { readFileSync } = await import("node:fs");
+    trailVersion = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf-8")).version;
+  } catch {}
+  app.get("/version", (c) => c.json({ package: "@silverbackbase/trail", version: trailVersion }));
+
   app.route("/", createApiRoutes(db));
   app.all("/mcp", requireAuth, createMcpHandler(db));
 

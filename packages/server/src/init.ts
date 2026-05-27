@@ -14,6 +14,9 @@ let cliToken: string | undefined = tokenIdx !== -1 ? args[tokenIdx + 1] : args.f
 const UNIFIED_MCP_URL = "https://mcp.silverbackbase.com/mcp";
 const SKILL_NAME = "trail-attribution-sbb";
 
+let PKG_VERSION = "0.0.0";
+try { PKG_VERSION = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf-8")).version; } catch {}
+
 function configHasUnifiedMcp(configPath: string): boolean {
   if (!existsSync(configPath)) return false;
   try {
@@ -110,6 +113,34 @@ function upsertMcp(configPath: string, token: string) {
   writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n", "utf-8");
 }
 
+function installVersionHook(sbbDir: string, claudeSettingsPath: string) {
+  const __dir = dirname(fileURLToPath(import.meta.url));
+  const hookSrc = join(__dir, "..", "assets", "hooks", "trail-version-hook.mjs");
+  if (!existsSync(hookSrc)) return;
+
+  mkdirSync(sbbDir, { recursive: true });
+  const hookDest = join(sbbDir, "trail-version-hook.mjs");
+  copyFileSync(hookSrc, hookDest);
+
+  let settings: Record<string, unknown> = {};
+  if (existsSync(claudeSettingsPath)) {
+    try { settings = JSON.parse(readFileSync(claudeSettingsPath, "utf-8")); } catch {}
+  } else {
+    mkdirSync(dirname(claudeSettingsPath), { recursive: true });
+  }
+
+  type HookEntry = { matcher: string; hooks: { type: string; command: string }[] };
+  const hooks = (settings.hooks as Record<string, HookEntry[]>) ?? {};
+  const ups   = hooks.UserPromptSubmit ?? [];
+
+  if (!ups.some(h => h.hooks?.some(hook => hook.command?.includes("trail-version-hook")))) {
+    ups.push({ matcher: "*", hooks: [{ type: "command", command: `node "${hookDest}"` }] });
+    hooks.UserPromptSubmit = ups;
+    settings.hooks = hooks;
+    writeFileSync(claudeSettingsPath, JSON.stringify(settings, null, 2) + "\n", "utf-8");
+  }
+}
+
 function installSkill(skillsDir: string): boolean {
   const __dir = dirname(fileURLToPath(import.meta.url));
   const src = join(__dir, "..", "assets", "skills", SKILL_NAME, "SKILL.md");
@@ -195,6 +226,15 @@ async function main() {
   for (const target of skillTargets) {
     if (installSkill(target.dir)) skillInstalled.push(target.name);
   }
+
+  // Write installed version + seed cache
+  const sbbDir = join(home, ".silverbackbase");
+  mkdirSync(sbbDir, { recursive: true });
+  writeFileSync(join(sbbDir, "trail-skill-version"), PKG_VERSION, "utf-8");
+  writeFileSync(join(sbbDir, "trail-version-cache.json"), JSON.stringify({ version: PKG_VERSION, checkedAt: Date.now() }), "utf-8");
+
+  // Install update-check hook
+  installVersionHook(sbbDir, join(home, ".claude", "settings.json"));
 
   // Summary
   console.log("\n  Trail configuré !\n");
